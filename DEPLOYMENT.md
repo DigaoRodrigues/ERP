@@ -2,6 +2,10 @@
 
 This guide explains how to deploy the ERP Multi-Tenant system to Railway without Docker Desktop.
 
+## ⚠️ CRITICAL: This is a Monorepo
+
+This project has **backend** and **frontend** in separate directories. You **MUST** deploy them as **separate Railway services** with the **Root Directory** configured for each.
+
 ## Prerequisites
 
 - GitHub account with repository access
@@ -12,8 +16,8 @@ This guide explains how to deploy the ERP Multi-Tenant system to Railway without
 
 Railway will deploy three separate services:
 1. **PostgreSQL Database** (Railway Plugin)
-2. **Backend API** (FastAPI)
-3. **Frontend** (Next.js)
+2. **Backend API** (FastAPI) - Root Directory: `/backend`
+3. **Frontend** (Next.js) - Root Directory: `/frontend`
 
 ## Step-by-Step Deployment
 
@@ -26,54 +30,54 @@ Railway will deploy three separate services:
 ### 2. Create New Project
 
 1. Click "New Project" in Railway dashboard
-2. Select "Deploy from GitHub repo"
-3. Choose your repository: `DigaoRodrigues/ERP`
-4. Railway will detect your project structure
+2. Give it a name: "ERP Multi-Tenant"
+3. You'll add services to this project
 
-### 3. Add PostgreSQL Database
+### 3. Add PostgreSQL Database FIRST
 
 1. In your Railway project, click "New"
 2. Select "Database" → "Add PostgreSQL"
 3. Railway will provision a PostgreSQL instance
 4. Note: Database URL will be automatically available as `DATABASE_URL`
+5. **Wait for PostgreSQL to be ready before proceeding**
 
 ### 4. Deploy Backend Service
 
 #### 4.1 Create Backend Service
 
 1. Click "New" → "GitHub Repo"
-2. Select your repository
-3. Configure the service:
-   - **Name**: `erp-backend`
-   - **Root Directory**: `/backend`
-   - **Build Command**: (auto-detected from requirements.txt)
-   - **Start Command**: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
+2. Select your repository: `DigaoRodrigues/ERP`
+3. **CRITICAL STEP**: After service is created, go to **Settings**
+4. Find **"Root Directory"** setting
+5. Set it to: `backend` (without leading slash)
+6. Click "Save"
+7. Railway will automatically redeploy with correct directory
 
 #### 4.2 Configure Backend Environment Variables
 
-Add these environment variables in Railway dashboard:
+Go to Backend service → Variables tab → Add these:
 
 ```bash
-# Database (auto-provided by Railway PostgreSQL plugin)
+# Database (Reference the PostgreSQL service)
 DATABASE_URL=${{Postgres.DATABASE_URL}}
 
 # JWT Configuration (IMPORTANT: Generate secure keys!)
-JWT_SECRET_KEY=<generate-with-openssl-rand-hex-32>
+JWT_SECRET_KEY=your-generated-secret-key-here
 JWT_ALGORITHM=HS256
 ACCESS_TOKEN_EXPIRE_MINUTES=30
 REFRESH_TOKEN_EXPIRE_DAYS=7
 
 # AI Integration
 AI_PROVIDER=claude
-AI_API_KEY=<your-anthropic-api-key>
+AI_API_KEY=your-anthropic-api-key-here
 
 # Application Settings
 ENVIRONMENT=production
 PROJECT_NAME=ERP Multi-Tenant API
 VERSION=0.1.0
 
-# CORS (use your Railway frontend URL)
-ALLOWED_ORIGINS=https://your-frontend.railway.app,https://erp-frontend-production.up.railway.app
+# CORS (will update after frontend is deployed)
+ALLOWED_ORIGINS=http://localhost:3000
 ```
 
 **Generate JWT Secret Key:**
@@ -82,9 +86,10 @@ ALLOWED_ORIGINS=https://your-frontend.railway.app,https://erp-frontend-productio
 openssl rand -hex 32
 ```
 
-#### 4.3 Backend Deployment Settings
+#### 4.3 Backend Service Settings
 
-- **Watch Paths**: `/backend/**`
+- **Root Directory**: `backend` ✅ CRITICAL
+- **Watch Paths**: Leave default (watches entire repo)
 - **Deploy on Push**: Enable for `main` branch
 - **Health Check Path**: `/health`
 
@@ -93,33 +98,61 @@ openssl rand -hex 32
 #### 5.1 Create Frontend Service
 
 1. Click "New" → "GitHub Repo"
-2. Select your repository
-3. Configure the service:
-   - **Name**: `erp-frontend`
-   - **Root Directory**: `/frontend`
-   - **Build Command**: `npm install && npm run build`
-   - **Start Command**: `npm start`
+2. Select your repository: `DigaoRodrigues/ERP` (same repo, different service)
+3. **CRITICAL STEP**: After service is created, go to **Settings**
+4. Find **"Root Directory"** setting
+5. Set it to: `frontend` (without leading slash)
+6. Click "Save"
+7. Railway will automatically redeploy with correct directory
 
 #### 5.2 Configure Frontend Environment Variables
 
+Go to Frontend service → Variables tab → Add these:
+
 ```bash
 # Backend API URL (use your Railway backend URL)
-NEXT_PUBLIC_API_URL=https://your-backend.railway.app
+NEXT_PUBLIC_API_URL=https://your-backend-service.railway.app
 
 # Node Environment
 NODE_ENV=production
 ```
 
-#### 5.3 Frontend Deployment Settings
+**To get your backend URL:**
+1. Go to Backend service
+2. Click "Settings" → "Networking"
+3. Copy the public domain (e.g., `https://erp-backend-production.up.railway.app`)
+4. Paste it as `NEXT_PUBLIC_API_URL` in frontend variables
 
-- **Watch Paths**: `/frontend/**`
+#### 5.3 Frontend Service Settings
+
+- **Root Directory**: `frontend` ✅ CRITICAL
+- **Watch Paths**: Leave default
 - **Deploy on Push**: Enable for `main` branch
 
-### 6. Run Database Migrations
+### 6. Update Backend CORS Settings
 
-Once backend is deployed, run migrations:
+Now that frontend is deployed:
 
-#### Option A: Using Railway CLI
+1. Go to Backend service → Variables
+2. Update `ALLOWED_ORIGINS` to include your frontend URL:
+   ```bash
+   ALLOWED_ORIGINS=https://your-frontend-service.railway.app,http://localhost:3000
+   ```
+3. Save and redeploy backend
+
+### 7. Run Database Migrations
+
+Once backend is deployed successfully:
+
+#### Option A: Using Railway Dashboard (Easiest)
+
+1. Go to Backend service
+2. Click "Deployments" tab
+3. Find the latest successful deployment
+4. Click the three dots (⋮) → "View Logs"
+5. You'll need to run migrations manually via Railway CLI (see Option B)
+
+#### Option B: Using Railway CLI
 
 ```bash
 # Install Railway CLI
@@ -131,25 +164,78 @@ railway login
 # Link to your project
 railway link
 
+# Select backend service
+railway service
+
 # Run migrations
-railway run --service erp-backend alembic upgrade head
+railway run alembic upgrade head
 ```
 
-#### Option B: Using Railway Dashboard
+### 8. Verify Deployment
 
-1. Go to backend service
-2. Click "Settings" → "Deploy"
-3. Add a one-time deployment command:
-   ```bash
-   alembic upgrade head
-   ```
+#### Backend Health Check:
+```bash
+curl https://your-backend-service.railway.app/health
+```
 
-### 7. Configure Custom Domains (Optional)
+Expected response:
+```json
+{"status": "healthy"}
+```
+
+#### API Documentation:
+Visit: `https://your-backend-service.railway.app/docs`
+
+#### Frontend:
+Visit: `https://your-frontend-service.railway.app`
+
+### 9. Configure Custom Domains (Optional)
 
 1. Go to each service settings
 2. Click "Settings" → "Domains"
 3. Add custom domain or use Railway-provided domain
 4. Update CORS settings in backend with new domains
+
+## Troubleshooting
+
+### Error: "Nixpacks was unable to generate a build plan"
+
+**Solution**: You forgot to set the Root Directory!
+1. Go to service Settings
+2. Set Root Directory to `backend` or `frontend`
+3. Save and redeploy
+
+### Error: "Set the root directory to 'backend' or 'frontend'"
+
+**Solution**: Same as above - configure Root Directory in service settings.
+
+### Backend Won't Start
+
+1. Check logs: Backend service → Deployments → View Logs
+2. Verify all environment variables are set
+3. Ensure DATABASE_URL is connected to PostgreSQL service
+4. Check Python version compatibility (should be 3.11)
+
+### Frontend Can't Connect to Backend
+
+1. Verify `NEXT_PUBLIC_API_URL` is correct
+2. Check CORS settings in backend `ALLOWED_ORIGINS`
+3. Ensure backend is deployed and healthy
+4. Check browser console for errors
+
+### Database Connection Issues
+
+1. Verify `DATABASE_URL` format in backend variables
+2. Check PostgreSQL service is running
+3. Ensure database migrations ran successfully
+4. Check connection pool settings
+
+### Build Fails
+
+1. Check build logs for specific errors
+2. Verify `nixpacks.toml` exists in backend/frontend directories
+3. Ensure all dependencies are listed in requirements.txt/package.json
+4. Check Railway service limits
 
 ## Environment-Specific Deployments
 
@@ -210,36 +296,6 @@ railway run --service postgres pg_dump > backup.sql
 # Restore from backup
 railway run --service postgres psql < backup.sql
 ```
-
-## Troubleshooting
-
-### Backend Won't Start
-
-1. Check logs for errors
-2. Verify all environment variables are set
-3. Ensure DATABASE_URL is connected
-4. Check Python version compatibility
-
-### Frontend Can't Connect to Backend
-
-1. Verify NEXT_PUBLIC_API_URL is correct
-2. Check CORS settings in backend
-3. Ensure backend is deployed and healthy
-4. Check network/firewall settings
-
-### Database Connection Issues
-
-1. Verify DATABASE_URL format
-2. Check PostgreSQL service is running
-3. Ensure database migrations ran successfully
-4. Check connection pool settings
-
-### Deployment Fails
-
-1. Check build logs for errors
-2. Verify package.json/requirements.txt
-3. Ensure all dependencies are listed
-4. Check Railway service limits
 
 ## Cost Optimization
 
@@ -323,11 +379,61 @@ railway run --service erp-backend alembic downgrade -1
 railway run --service erp-backend alembic downgrade <revision>
 ```
 
+## Common Railway Configuration Mistakes
+
+### ❌ Wrong: Deploying entire repo without Root Directory
+```
+Root Directory: (empty)
+Result: Build fails - Nixpacks can't find project files
+```
+
+### ✅ Correct: Set Root Directory for each service
+```
+Backend Service:
+  Root Directory: backend
+  
+Frontend Service:
+  Root Directory: frontend
+```
+
+### ❌ Wrong: Using relative paths in Root Directory
+```
+Root Directory: /backend  (with leading slash)
+Root Directory: ./backend (with ./)
+```
+
+### ✅ Correct: Use simple directory name
+```
+Root Directory: backend
+Root Directory: frontend
+```
+
 ## Support
 
 - **Railway Documentation**: https://docs.railway.app
 - **Railway Discord**: https://discord.gg/railway
 - **Project Issues**: https://github.com/DigaoRodrigues/ERP/issues
+
+## Quick Reference Card
+
+```
+┌─────────────────────────────────────────────────────┐
+│  Railway Deployment Checklist                       │
+├─────────────────────────────────────────────────────┤
+│  ☐ Create Railway account                           │
+│  ☐ Create new project                               │
+│  ☐ Add PostgreSQL database                          │
+│  ☐ Deploy backend (Root Directory: backend)         │
+│  ☐ Configure backend environment variables          │
+│  ☐ Deploy frontend (Root Directory: frontend)       │
+│  ☐ Configure frontend environment variables         │
+│  ☐ Update backend CORS with frontend URL            │
+│  ☐ Run database migrations                          │
+│  ☐ Test backend health check                        │
+│  ☐ Test frontend                                    │
+│  ☐ Configure custom domains (optional)              │
+└─────────────────────────────────────────────────────┘
+```
 
 ## Next Steps After Deployment
 
