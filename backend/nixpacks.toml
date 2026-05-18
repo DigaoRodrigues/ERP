@@ -1,5 +1,5 @@
 [phases.setup]
-nixPkgs = ["...", "postgresql"]
+nixPkgs = ["..."]
 
 [start]
 cmd = "uvicorn app.main:app --host 0.0.0.0 --port $PORT"
