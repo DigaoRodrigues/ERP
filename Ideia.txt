@@ -1,0 +1,25 @@
+Vou desenvolver um ERP SaaS multi-tenant voltado para vendedores de marketplaces (Shopee e Mercado Livre), começando como uso pessoal mas já arquitetado para escalar como produto comercial.
+
+Contexto do negócio Sou vendedor iniciante em Shopee e Mercado Livre e quero construir uma ferramenta que resolva minhas próprias dores primeiro, evoluindo junto com o negócio. No futuro, pretendo oferecer a ferramenta para outros vendedores com modelo de monetização por planos.
+
+Stack tecnológica definida Backend em Python com FastAPI. Banco de dados PostgreSQL com Alembic para migrations. Frontend em Next.js com TypeScript. Containerização com Docker desde o início. CICD com GitHub Actions. Hospedagem inicial no Railway. Abstração do motor de IA para permitir troca entre Claude (Anthropic), GPT-4o (OpenAI) e Grok (xAI) sem reescrever lógica.
+
+Arquitetura multi-tenant Cada cliente terá um workspace isolado. Isolamento de dados por schema no PostgreSQL (um schema por workspace). Autenticação com JWT e refresh token usando python-jose ou authlib. Sistema de permissões RBAC por workspace com papéis de admin, operador e visualizador. As APIs devem ter rate limiting por workspace para evitar que um cliente impacte outro.
+
+DevOps e boas práticas Versionamento com Git e GitHub. Deploy automatizado via GitHub Actions a cada push na branch principal. Ambientes separados para dev, staging e produção usando variáveis de ambiente. Rollback via imagens Docker versionadas. Logs centralizados com Grafana Loki ou Papertrail. Backup automatizado do PostgreSQL com pg_dump agendado. Documentação automática da API via Swagger (nativo do FastAPI).
+
+Módulos a desenvolver nesta ordem Primeiro o controle de estoque, depois precificação, depois controle financeiro.
+
+Controle de estoque deve rastrear entrada de mercadoria com custo de aquisição, saída por venda separada por canal (ML e Shopee), estoque atual por SKU, e alertas de estoque baixo. O mesmo produto pode estar anunciado nos dois marketplaces simultaneamente, então o sistema deve abater do estoque geral independente do canal da venda.
+
+Precificação deve calcular preço mínimo viável considerando custo de aquisição, comissão do marketplace por canal (ML e Shopee têm percentuais diferentes por categoria), frete quando absorvido pelo vendedor, e margem desejada. O objetivo é evitar venda no prejuízo.
+
+Controle financeiro deve separar receita gerada de receita recebida (ML e Shopee têm repasse com delay), consolidar entradas e saídas, e gerar um DRE simples por período.
+
+Integração com IA Criar uma camada de abstração intermediária no backend que permite trocar o motor de IA (Claude, GPT-4o, Grok) via configuração sem alterar a lógica da aplicação. A memória da IA será implementada em duas fases na primeira fase, contexto direto no prompt, onde antes de cada chamada o backend busca dados relevantes do workspace no PostgreSQL e injeta no prompt junto com a pergunta do usuário. Na segunda fase, RAG com pgvector dentro do próprio PostgreSQL para bases de dados maiores. Os modelos suportam envio de imagens via API, o que permitirá no futuro extrair dados de notas fiscais por imagem e gerar descrições de anúncios a partir de fotos de produtos.
+
+Estrutura de pastas sugerida Seguir separação clara entre domínios autenticação, workspaces, estoque, precificação, financeiro e integração com IA. Cada domínio com seus próprios models, schemas, routes e services.
+
+Restrições e prioridades Custo inicial zero ou mínimo. Código limpo e preparado pra escalar. Segurança desde o início dado que o desenvolvedor tem background em segurança da informação e infraestrutura. Começar pelo mínimo funcionando e iterar.
+
+Me ajude a desenvolver este projeto passo a passo, começando pela fundação estrutura do projeto, configuração do Docker, banco de dados com suporte a multi-tenancy por schema, e sistema de autenticação com JWT.
