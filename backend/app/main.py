@@ -40,8 +40,11 @@ async def health_check():
     return {"status": "healthy"}
 
 
-# TODO: Add routers for different modules
-# from app.auth.routes import router as auth_router
+# Include routers
+from app.auth.routes import router as auth_router
+
+app.include_router(auth_router, prefix="/api/v1/auth", tags=["Authentication"])
+
+# TODO: Add more routers as modules are developed
 # from app.workspaces.routes import router as workspaces_router
-# app.include_router(auth_router, prefix="/api/v1/auth", tags=["Authentication"])
 # app.include_router(workspaces_router, prefix="/api/v1/workspaces", tags=["Workspaces"])
