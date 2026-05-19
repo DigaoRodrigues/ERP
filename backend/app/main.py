@@ -10,8 +10,8 @@ app = FastAPI(
     title=settings.PROJECT_NAME,
     version=settings.VERSION,
     description="Multi-tenant SaaS ERP for marketplace sellers",
-    docs_url="/docs" if settings.ENVIRONMENT != "production" else None,
-    redoc_url="/redoc" if settings.ENVIRONMENT != "production" else None,
+    docs_url="/docs",  # Always enable docs for now (disable later in production)
+    redoc_url="/redoc",
 )
 
 # Configure CORS
