@@ -3,6 +3,8 @@ Application configuration using Pydantic Settings.
 Loads configuration from environment variables.
 """
 from typing import List
+import json
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -28,10 +30,35 @@ class Settings(BaseSettings):
     AI_API_KEY: str = ""
     
     # CORS
-    ALLOWED_ORIGINS: List[str] = [
-        "http://localhost:3000",
-        "http://localhost:8000",
-    ]
+    ALLOWED_ORIGINS: str = "http://localhost:3000,http://localhost:8000"
+    
+    @field_validator('ALLOWED_ORIGINS', mode='after')
+    @classmethod
+    def parse_allowed_origins(cls, v: str) -> List[str]:
+        """
+        Parse ALLOWED_ORIGINS from various formats:
+        - JSON array: ["http://localhost:3000","https://example.com"]
+        - Comma-separated: http://localhost:3000,https://example.com
+        - Single string: http://localhost:3000
+        """
+        # Try to parse as JSON first
+        try:
+            parsed = json.loads(v)
+            if isinstance(parsed, list):
+                return parsed
+        except (json.JSONDecodeError, TypeError):
+            pass
+        
+        # Handle comma-separated string
+        if ',' in v:
+            return [origin.strip() for origin in v.split(',') if origin.strip()]
+        
+        # Handle single string
+        if v and v.strip():
+            return [v.strip()]
+        
+        # Fallback to default
+        return ["http://localhost:3000", "http://localhost:8000"]
     
     # Rate Limiting
     RATE_LIMIT_PER_MINUTE: int = 60
@@ -40,6 +67,7 @@ class Settings(BaseSettings):
         env_file=".env",
         env_file_encoding="utf-8",
         case_sensitive=True,
+        extra='ignore',  # Ignore extra environment variables not defined in Settings
     )
 
 
