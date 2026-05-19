@@ -1,0 +1,21 @@
+npm warn config production Use `--omit=dev` instead.
+> erp-frontend@0.1.0 build
+> next build
+Attention: Next.js now collects completely anonymous telemetry regarding usage.
+This information is used to shape Next.js' roadmap and prioritize features.
+You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
+https://nextjs.org/telemetry
+   ▲ Next.js 14.1.0
+   Creating an optimized production build ...
+ ⨯ page.tsx doesn't have a root layout. To fix this error, make sure every page has a root layout.
+Compiler server unexpectedly exited with code: 1 and signal: null
+> Build error occurred
+
+Error: Jest worker encountered 1 child process exceptions, exceeding retry limit
+    at ChildProcessWorker.initialize (/app/node_modules/next/dist/compiled/jest-worker/index.js:1:11580)
+    at ChildProcessWorker._onExit (/app/node_modules/next/dist/compiled/jest-worker/index.js:1:12545)
+    at ChildProcess.emit (node:events:529:35)
+    at ChildProcess._handle.onexit (node:internal/child_process:292:12) {
+  type: 'WorkerError'
+}
+Build Failed: build daemon returned an error < failed to solve: process "/bin/bash -ol pipefail -c npm run build" did not complete successfully: exit code: 1 >

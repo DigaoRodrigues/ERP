@@ -13,6 +13,14 @@ When implementing a feature or fixing an issue, consult this index to identify w
 
 ---
 
+## Project Guidelines
+
+| Agent | File | Purpose | When to Consult |
+|-------|------|---------|-----------------|
+| **Contributing Guidelines** | `CONTRIBUTING.md` | Development rules, standards, workflows | Before starting any development work, code reviews, setting up environment |
+
+---
+
 ## Technical Domain Agents
 
 ### Infrastructure & DevOps
@@ -37,6 +45,7 @@ When implementing a feature or fixing an issue, consult this index to identify w
 |-------|------|---------|-----------------|
 | **Next.js & React** | `nextjs_react_agent.md` | App router, components, state management | Frontend features, routing, component design |
 | **UI/UX & Styling** | `ui_styling_agent.md` | Tailwind CSS, responsive design, accessibility | Styling, layout, user interface components |
+| **Internationalization (i18n)** | `i18n_agent.md` | Multi-language support, translation management | Adding language support, translating content |
 
 ### AI Integration
 
@@ -81,14 +90,16 @@ When implementing a feature or fixing an issue, consult this index to identify w
 ### By Development Phase
 
 **Planning & Design:**
-1. `api_design_agent.md` - API structure
-2. `database_agent.md` - Data model
-3. `multitenancy_agent.md` - Tenant isolation
+1. `CONTRIBUTING.md` - Development standards
+2. `api_design_agent.md` - API structure
+3. `database_agent.md` - Data model
+4. `multitenancy_agent.md` - Tenant isolation
 
 **Implementation:**
 1. Relevant business domain agent
 2. `auth_security_agent.md` - Security checks
-3. `testing_agent.md` - Test strategy
+3. `i18n_agent.md` - Internationalization (if UI changes)
+4. `testing_agent.md` - Test strategy
 
 **Deployment:**
 1. `docker_agent.md` - Container setup
@@ -102,7 +113,8 @@ When implementing a feature or fixing an issue, consult this index to identify w
 2. `api_design_agent.md`
 3. `database_agent.md`
 4. `nextjs_react_agent.md`
-5. `testing_agent.md`
+5. `i18n_agent.md` - Add translations
+6. `testing_agent.md`
 
 **Marketplace Integration:**
 1. Marketplace-specific agent (ML/Shopee)
@@ -119,6 +131,12 @@ When implementing a feature or fixing an issue, consult this index to identify w
 1. `performance_agent.md`
 2. `database_agent.md`
 3. `error_logging_agent.md`
+
+**UI/UX Feature:**
+1. `nextjs_react_agent.md`
+2. `ui_styling_agent.md`
+3. `i18n_agent.md` - Ensure translations
+4. `testing_agent.md`
 
 ---
 
@@ -164,4 +182,4 @@ When implementing a feature or fixing an issue, consult this index to identify w
 ---
 
 **Last Updated**: 2026-05-19  
-**Version**: 1.0.0
+**Version**: 1.0.1

@@ -1,9 +1,8 @@
-/** @type {import('next').NextConfig} */
-const nextConfig = {
-  reactStrictMode: true,
-  env: {
-    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000',
-  },
-}
+const withNextIntl = require('next-intl/plugin')(
+  './src/i18n/request.ts'
+);
 
-module.exports = nextConfig
+/** @type {import('next').NextConfig} */
+const nextConfig = {};
+
+module.exports = withNextIntl(nextConfig);
